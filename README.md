@@ -32,6 +32,22 @@ Identity Provider steps
 
 Application steps
 
+The SDK is available on central maven repository 
+
+Add as gradle dependency 
+
+implementation 'com.webfrolic.sdk:oauth-sdk:1.0.0'
+
+Add as maven dependency
+
+<dependency>
+    <groupId>com.webfrolic.sdk</groupId>
+    <artifactId>oauth-sdk</artifactId>
+    <version>1.0.0</version>
+    <scope>compile</scope>
+</dependency>
+
+
 Create a instance of the Filter with the following parameters
 
 1. Server URL - URL for your application
