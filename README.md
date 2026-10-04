@@ -1,4 +1,4 @@
-#The SDK makes it easier to enable OIDC/OAUTH Flow for your application.
+The SDK makes it easier to enable OIDC/OAUTH Flow for your application.
 
 
 The SDK allows you to integrate with almost any identity provider that supports OAuth2.1 or OIDC flows with PKCE 
@@ -51,7 +51,7 @@ By default the SKD uses "openid email profile" for the scopes. You can always ov
 
 The SDK ships with default Session store which uses server session to store user data. You can plugin your own custom session store by implementing SessionStore interface and providing it to filter
 
-##How it works
+How it works
 It is Servlet filter based, it intercepts every request to check if its authenticated or not. If its not authenticated then it redirect the user to Identity provider for authentication
 
 
