@@ -50,14 +50,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * This filter checks if the requested path requires authentication 
- * 1. If yes then it checks if there is an existing session 
- * 		a. If session is present then check for IP address match, if no match then delete the session 
- * 		b. If there is no session then 
- * 		c. Check if its a OIDC callback URL in which case parse the user from idToken d. Otherwise craft a OIDC URL for authentication to the
+ * This filter checks if the requested path requires authentication 1. If yes
+ * then it checks if there is an existing session a. If session is present then
+ * check for IP address match, if no match then delete the session b. If there
+ * is no session then c. Check if its a OIDC callback URL in which case parse
+ * the user from idToken d. Otherwise craft a OIDC URL for authentication to the
  * IDP server
  * 
- * Continously send signals to IDP for session usage if this is configured as primary application
+ * Continuously send signals to IDP for session usage if this is configured as
+ * primary application
  * 
  *
  */
@@ -72,7 +73,7 @@ public class OidcFilter implements Filter {
 	private static final HttpClient httpClient = HttpClient.newHttpClient();
 	public static final String SESSION_CODE_VERIFIER = "pkce_code_verifier";
 	public static final String SESSION_STATE = "pkce_state";
-	 public static final String URL_TO_CONTINUE="url_to_continue";
+	public static final String URL_TO_CONTINUE = "url_to_continue";
 	static final String OIDC_CALLBACK_URI = "/oauth2/callback";
 	static final String OIDC_LOGOUT_CALLBACK_URI = "/oauth2/logout/callback";
 	static final String LOGOUT = "/logout";
@@ -85,7 +86,7 @@ public class OidcFilter implements Filter {
 	private String clientSecret;
 	private String sessionEndpointUrl;
 	private final List<String> excludedPaths = new LinkedList<>();
-
+	private String scopes = "openid profile email";
 	private String serverUrl = null;
 	private String serverLogout = null;
 	private boolean enableLogout = false;
@@ -125,6 +126,10 @@ public class OidcFilter implements Filter {
 		if (StringUtils.isBlank(tokenUrl)) {
 			throw new IllegalArgumentException("Token URL is missing");
 		}
+	}
+	
+	public void setScope(String scope) {
+		this.scopes = scope;
 	}
 
 	public OidcFilter(String serverUrl, String issuer, String jwkUrl, String authUrl, String tokenUrl, String clientId,
@@ -284,7 +289,8 @@ public class OidcFilter implements Filter {
 		String state = PkceUtil.generateState();
 
 		// Persist in server-side session — the browser never sees code_verifier
-		this.sessionStore.addAttribute(req, res,URL_TO_CONTINUE, req.getRequestURI()+ (StringUtils.isBlank(req.getQueryString())?"": "?"+req.getQueryString()));
+		this.sessionStore.addAttribute(req, res, URL_TO_CONTINUE,
+				req.getRequestURI() + (StringUtils.isBlank(req.getQueryString()) ? "" : "?" + req.getQueryString()));
 		this.sessionStore.addAttribute(req, res, SESSION_CODE_VERIFIER, codeVerifier);
 		this.sessionStore.addAttribute(req, res, SESSION_STATE, state);
 
@@ -292,7 +298,7 @@ public class OidcFilter implements Filter {
 		builder.append("response_type=").append("code");
 		builder.append("&redirect_uri=").append(URLEncoder.encode(this.serverUrl, Charset.defaultCharset()));
 		builder.append("&client_id=").append(this.clientId);
-		builder.append("&scope=").append(URLEncoder.encode("openid profile email", Charset.defaultCharset()));
+		builder.append("&scope=").append(URLEncoder.encode(scopes, Charset.defaultCharset()));
 		builder.append("&state=").append(state);
 		builder.append("&code_challenge=").append(codeChallenge);
 		builder.append("&code_challenge_method=").append("S256");
@@ -338,11 +344,11 @@ public class OidcFilter implements Filter {
 		this.sessionStore.removeAttribute(req, rep, SESSION_CODE_VERIFIER);
 
 		logger.info("Exchange for tokens");
-		//Exchange authorization code for tokens ────────────────────────────
+		// Exchange authorization code for tokens ────────────────────────────
 		OAuth2TokenResponse tokens = exchangeCodeForTokens(code, codeVerifier);
 
 		logger.info("Validate JWT token");
-		//Validate the id_token JWT ─────────────────────────────────────────
+		// Validate the id_token JWT ─────────────────────────────────────────
 		Map<String, Object> claims = tokenValidator.validate(tokens.getIdToken());
 
 		logger.info("recieved the following claims {}", claims);
@@ -352,7 +358,11 @@ public class OidcFilter implements Filter {
 		userRequest.setEmail((String) claims.get("email"));
 		userRequest.setSubjectId((String) claims.get("sub")); // This is the userId
 		userRequest.setTenantId((String) claims.get("tenant"));
-		userRequest.setTenantRole((String) claims.get("role"));
+		if (StringUtils.isNotBlank(userRequest.getTenantId())) {
+			userRequest.setTenantRole((String) claims.get("role"));
+		} else {
+			userRequest.setRole((String) claims.get("role"));
+		}
 		userRequest.setAccessToken(tokens.getAccessToken());
 		userRequest.setSessionId((String) claims.get("sessionId"));
 		PairBean<String> ipPair = SdkUtil.getIpAddressFromRequest(req, false);

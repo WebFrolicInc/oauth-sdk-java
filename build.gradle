@@ -38,11 +38,11 @@ mavenPublishing {
 }
 
 mavenPublishing {
-            coordinates("com.webfrolic.sdk", "oauth-sdk", "1.0.0")        	
+            coordinates("com.webfrolic.sdk", "oauth-sdk", "1.1.0")        	
             pom {
 	                name = 'Webfrolic OAuth SDK'
 	                description = 'OAuth SKD to integrate with Webfrolic Identity provider'
-	                url = 'http://webfrolic.com/sdk/java/oauth'
+	                url = 'https://github.com/WebFrolicInc/oauth-sdk-java'
 	                inceptionYear= "2026"
 	                licenses {
 	                    license {
@@ -58,9 +58,9 @@ mavenPublishing {
 	                    }
 	                }
 					scm {
-				      url = "https://webfrolic.com/sdk/java/oauth-sdk"
-				      connection = "scm:git:git://webfrolic.com/webfrolic/oauth-sdk.git"
-				      developerConnection = "scm:git:ssh://git@webfrolic.com/webfrolic/oauth-sdk.git"
+				      url = "https://github.com/WebFrolicInc/oauth-sdk-java"
+				      connection = "scm:git:https://github.com/WebFrolicInc/oauth-sdk-java.git"
+				      developerConnection = "scm:git:git@github.com:WebFrolicInc/oauth-sdk-java.git"
 				    }
                 
              }
